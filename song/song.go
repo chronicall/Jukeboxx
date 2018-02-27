@@ -3,6 +3,7 @@ package song
 import (
     "fmt"
     "time"
+    "sync"
 )
 
 type Song struct {
@@ -10,6 +11,7 @@ type Song struct {
     Votes int
     Duration time.Duration
     LastPlayed time.Time
+    Lock sync.RWMutex
 }
 
 type ByVotes []Song
@@ -34,12 +36,16 @@ func (s Song) SongInfo() {
 
 func (s *Song) UpdateLastPlayed(t time.Time) {
     // lock song?
+    s.Lock.Lock()
     s.LastPlayed = t
-    // unlock song
+    // unlock son
+    s.Lock.Unlock()
 }
 
 func (s *Song) VoteForSong() {
     // lock song?
+    s.Lock.Lock()
     s.Votes++
     // unlock song
+    s.Lock.Unlock()
 }
