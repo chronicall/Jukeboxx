@@ -1,11 +1,9 @@
 package songqueue
 
 import (
-    "bufio"
     "fmt"
     "../song"
     "sort"
-    "strings"
     "time"
     "sync"
 )
