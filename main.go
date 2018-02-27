@@ -16,7 +16,7 @@ func JukeBox(s songqueue.SongQueue) {
     // find song in queue with highest votes that has not been played 
     // in the last 30 minutes
     // play it
-    // s.UpdateLastPlayed(time.Now())
+    // s.UpdateLastPlayed()
     time.Sleep(time.Second * 4)
     s.Lock.RLock()
     for _, element := range s.Songs {

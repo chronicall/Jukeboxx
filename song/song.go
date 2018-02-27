@@ -34,17 +34,16 @@ func (s Song) SongInfo() {
     fmt.Printf("Title: %s - Duration: %s\nVotes: %d - Last played: %02d-%v-%d, %02d:%02d.%02d\n", s.Name, durMinutes, s.Votes, day, month, year, hours, minutes, seconds)
 }
 
-func (s *Song) UpdateLastPlayed(t time.Time) {
+func (s *Song) UpdateLastPlayed() {
     s.Lock.Lock()
-    s.LastPlayed = t
+    s.LastPlayed = time.Now()
     s.Lock.Unlock()
 }
 
 func (s *Song) VoteForSong() {
     s.Lock.Lock()
-    s.Name = "This is a song by a band"
     fmt.Printf("Song: %s --- Before voting increment: %d\n", s.Name, s.Votes)
-    s.Votes = s.Votes + 1
+    s.Votes++
     fmt.Printf("Song: %s --- After voting increment: %d\n", s.Name, s.Votes)
     s.Lock.Unlock()
 }

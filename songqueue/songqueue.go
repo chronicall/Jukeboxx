@@ -47,43 +47,39 @@ func (s SongQueue) SortQueue() {
 
 // Return index of song in the queue that has the highest votes
 // AND has not been played in the last 30 minutes
-func (s *SongQueue) GetNextSong() *song.Song {
+func (s *SongQueue) GetNextSong() int {
     now := time.Now()
     s.SortQueue()
-    var requested *song.Song
+
     s.Lock.RLock()
-    for _, element := range s.Songs {
+    for index, element := range s.Songs {
         difference := now.Sub(element.LastPlayed)
         if difference.Minutes() > 30 {
-            requested = &element
-            break
+            return index
         }
     }
     s.Lock.RUnlock()
-    return requested
+    return -1
 }
 
 // Find a song in the queue by name
-func (s *SongQueue) GetSong(songName string) *song.Song {
-    var requested *song.Song
-
+func (s *SongQueue) GetSong(songName string) int {
     s.Lock.RLock()
-    for _, element := range s.Songs {
+    for index, element := range s.Songs {
         if element.Name == songName {
-            requested = &element
-            break
+            return index
         }
     }
     s.Lock.RUnlock()
-    return requested
+    return -1
 }
 
 // Vote for a song
 func (s *SongQueue) VoteForSong(name string) {
     s.Lock.RLock()
-    song := s.GetSong(name)
-    if song != nil {
-        song.VoteForSong()
+    requested := s.GetSong(name)
+    if requested > 0 {
+        s.Songs[requested].VoteForSong()
     } else {
         fmt.Println("Could not find song and therefore unable to register vote.")
     }
