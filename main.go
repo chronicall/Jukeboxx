@@ -20,7 +20,6 @@ func JukeBox(s songqueue.SongQueue) {
         // If we find a song, update it's statistics and play it
         if requested >= 0 {
             //duration := s.Songs[requested].GetDuration()
-            s.Songs[requested].UpdateLastPlayed()
             s.Songs[requested].Play()
             // Sleep for the duration of the song being played
             //time.Sleep(duration)
@@ -45,14 +44,14 @@ func JukeBox(s songqueue.SongQueue) {
 
 // Our goroutine for guests to vote for songs
 // Currently just vote for all songs 3 times
-// TODO: add lambda value to determine the average vote rate
-func Guest(songName string, s songqueue.SongQueue) {
+func Guest(songName string, s songqueue.SongQueue, lambda float32) {
     // Vote for the same song 3 times
     i := 1
     for i < 4 {
         s.VoteForSong(songName)
         i = i + 1
     }
+    // TODO: Find wait time with random
     // A rate of lambda = 0.5 means vote cast ON AVERAGE every 2 seconds
     // A rate of lambda = 2 means vote cast ON AVERAGE twice per second
     // Note from Marcel: use ExpFloat64()/lambda
@@ -100,7 +99,7 @@ func main() {
     // Maybe change it to more songs and an x number of guests who has a random
     // favourite song
     for _, element := range songListSlice {
-        go Guest(element[0], s)
+        go Guest(element[0], s, 1.1)
     }
     // endless loop until the jukebox is shut down
     // Maybe add some shutdown sequence/quit symbol
