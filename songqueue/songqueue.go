@@ -34,8 +34,10 @@ func (s *SongQueue) AddSong(songName, songDuration string) {
         LastPlayed: time.Time{},
     }
     // lock the queue
+    s.Lock.Lock()
     s.Songs = append(s.Songs, newSong)
     // unlock the queue
+    s.Lock.Unlock()
 }
 
 func (s SongQueue) SortQueue() {
@@ -43,7 +45,7 @@ func (s SongQueue) SortQueue() {
     s.Lock.Lock()
     sort.Sort(song.ByVotes(s.Songs))
     // Unlock the queue
-    s.Lock.Lock()
+    s.Lock.Unlock()
 }
 
 // Return index of song in the queue that has the highest votes
@@ -53,6 +55,7 @@ func (s *SongQueue) GetNextSong() *song.Song {
     s.SortQueue()
     var requested *song.Song
     // read lock queue
+    s.Lock.Lock()
     for _, element := range s.Songs {
         difference := now.Sub(element.LastPlayed)
         if difference.Minutes() > 30 {
@@ -61,6 +64,7 @@ func (s *SongQueue) GetNextSong() *song.Song {
         }
     }
     // read unlock queue
+    s.Lock.Unlock()
     return requested
 }
 
@@ -69,6 +73,7 @@ func (s *SongQueue) GetSong(songName string) *song.Song {
     var requested *song.Song
 
     // read lock queue
+    s.Lock.Lock()
     for _, element := range s.Songs {
         if element.Name == songName {
             requested = &element
@@ -76,12 +81,14 @@ func (s *SongQueue) GetSong(songName string) *song.Song {
         }
     }
     // read unlock queue
+    s.Lock.Unlock()
     return requested
 }
 
 // Vote for a song
 func (s *SongQueue) VoteForSong(name string) {
     // lock the queue
+    s.Lock.Lock()
     song := s.GetSong(name)
     if song != nil {
        song.VoteForSong()
@@ -89,5 +96,6 @@ func (s *SongQueue) VoteForSong(name string) {
         fmt.Println("Could not find song and therefore unable to register vote.")
     }
     // unlock the queue
+    s.Lock.Unlock()
 }
 
