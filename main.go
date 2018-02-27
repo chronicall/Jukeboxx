@@ -25,8 +25,9 @@ func JukeBox(s songqueue.SongQueue) {
 
 func Guest(songName string) {
     // Find wait time with random
-    // A rate of 0.5 means vote cast every 2 seconds
-    // A rate of 2 means vote cast twice per second
+    // A rate of lambda = 0.5 means vote cast ON AVERAGE every 2 seconds
+    // A rate of lambda = 2 means vote cast ON AVERAGE twice per second
+    // Note from Marcel: use ExpFloat64()/lambda
     fmt.Println(songName)
 }
 
