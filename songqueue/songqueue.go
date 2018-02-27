@@ -1,9 +1,11 @@
 package songqueue
 
 import (
+    "bufio"
     "fmt"
     "../song"
     "sort"
+    "strings"
     "time"
     "sync"
 )
@@ -13,12 +15,13 @@ type SongQueue struct {
     Lock sync.RWMutex
 }
 
-
 // initialize the list of songs
 // Loop over song names and durations (store in file that we read?)
-func (s *SongQueue) Init() {
-    songName, songDuration := "tmp", "3m40s"
-    s.AddSong(songName, songDuration)
+func (s *SongQueue) Init(songList [][]string) {
+    for _, song := range songList {
+        s.AddSong(song[0], song[1])
+        fmt.Printf("Added song:\n\t%s --- %s\n", song[0], song[1])
+    }
 }
 
 // Creates a Song object that we then insert into SongQueue
@@ -33,18 +36,14 @@ func (s *SongQueue) AddSong(songName, songDuration string) {
         Duration: dur,
         LastPlayed: time.Time{},
     }
-    // lock the queue
     s.Lock.Lock()
     s.Songs = append(s.Songs, newSong)
-    // unlock the queue
     s.Lock.Unlock()
 }
 
 func (s SongQueue) SortQueue() {
-    // lock the queue
     s.Lock.Lock()
     sort.Sort(song.ByVotes(s.Songs))
-    // Unlock the queue
     s.Lock.Unlock()
 }
 
@@ -54,8 +53,7 @@ func (s *SongQueue) GetNextSong() *song.Song {
     now := time.Now()
     s.SortQueue()
     var requested *song.Song
-    // read lock queue
-    s.Lock.Lock()
+    s.Lock.RLock()
     for _, element := range s.Songs {
         difference := now.Sub(element.LastPlayed)
         if difference.Minutes() > 30 {
@@ -63,8 +61,7 @@ func (s *SongQueue) GetNextSong() *song.Song {
             break
         }
     }
-    // read unlock queue
-    s.Lock.Unlock()
+    s.Lock.RUnlock()
     return requested
 }
 
@@ -72,30 +69,26 @@ func (s *SongQueue) GetNextSong() *song.Song {
 func (s *SongQueue) GetSong(songName string) *song.Song {
     var requested *song.Song
 
-    // read lock queue
-    s.Lock.Lock()
+    s.Lock.RLock()
     for _, element := range s.Songs {
         if element.Name == songName {
             requested = &element
             break
         }
     }
-    // read unlock queue
-    s.Lock.Unlock()
+    s.Lock.RUnlock()
     return requested
 }
 
 // Vote for a song
-func (s *SongQueue) VoteForSong(name string) {
-    // lock the queue
+func (s SongQueue) VoteForSong(name string) {
     s.Lock.Lock()
     song := s.GetSong(name)
     if song != nil {
-       song.VoteForSong()
+        song.VoteForSong()
     } else {
         fmt.Println("Could not find song and therefore unable to register vote.")
     }
-    // unlock the queue
     s.Lock.Unlock()
 }
 
