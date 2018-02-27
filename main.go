@@ -25,14 +25,15 @@ func JukeBox(s songqueue.SongQueue) {
     // if song is playing, poll the queue for the next one to be ready
 }
 
-func Guest(songName string, s songqueue.SongQueue) {
-    // Find wait time with random
+func Guest(songName string, s songqueue.SongQueue, lambda float32) {
+   
     i := 1
     for i < 4 {
         s.VoteForSong(songName)
         fmt.Printf("Voted for song: %s\n", songName)
         i = i + 1
     }
+    // TODO: Find wait time with random
     // A rate of lambda = 0.5 means vote cast ON AVERAGE every 2 seconds
     // A rate of lambda = 2 means vote cast ON AVERAGE twice per second
     // Note from Marcel: use ExpFloat64()/lambda
