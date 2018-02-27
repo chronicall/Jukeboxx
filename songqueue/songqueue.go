@@ -79,14 +79,14 @@ func (s *SongQueue) GetSong(songName string) *song.Song {
 }
 
 // Vote for a song
-func (s SongQueue) VoteForSong(name string) {
-    s.Lock.Lock()
+func (s *SongQueue) VoteForSong(name string) {
+    s.Lock.RLock()
     song := s.GetSong(name)
     if song != nil {
         song.VoteForSong()
     } else {
         fmt.Println("Could not find song and therefore unable to register vote.")
     }
-    s.Lock.Unlock()
+    s.Lock.RUnlock()
 }
 

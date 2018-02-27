@@ -8,6 +8,7 @@ import (
     "./songqueue"
     "strings"
     "sync"
+    "time"
 )
 
 func JukeBox(s songqueue.SongQueue) {
@@ -16,18 +17,24 @@ func JukeBox(s songqueue.SongQueue) {
     // in the last 30 minutes
     // play it
     // s.UpdateLastPlayed(time.Now())
-
+    time.Sleep(time.Second * 4)
+    s.Lock.RLock()
     for _, element := range s.Songs {
         element.SongInfo()
     }
     // if song is playing, poll the queue for the next one to be ready
 }
 
-func Guest(songName string) {
+func Guest(songName string, s songqueue.SongQueue) {
     // Find wait time with random
     // A rate of 0.5 means vote cast every 2 seconds
     // A rate of 2 means vote cast twice per second
-    fmt.Println(songName)
+    i := 1
+    for i < 4 {
+        s.VoteForSong(songName)
+        fmt.Printf("Voted for song: %s\n", songName)
+        i = i + 1
+    }
 }
 
 func main() {
@@ -57,7 +64,7 @@ func main() {
     // Maybe change it to more songs and an x number of guests who has a random
     // favourite song
     for _, element := range songListSlice {
-        go Guest(element[0])
+        go Guest(element[0], s)
     }
 
     for {

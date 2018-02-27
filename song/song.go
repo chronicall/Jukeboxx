@@ -42,6 +42,9 @@ func (s *Song) UpdateLastPlayed(t time.Time) {
 
 func (s *Song) VoteForSong() {
     s.Lock.Lock()
-    s.Votes++
+    s.Name = "This is a song by a band"
+    fmt.Printf("Song: %s --- Before voting increment: %d\n", s.Name, s.Votes)
+    s.Votes = s.Votes + 1
+    fmt.Printf("Song: %s --- After voting increment: %d\n", s.Name, s.Votes)
     s.Lock.Unlock()
 }
