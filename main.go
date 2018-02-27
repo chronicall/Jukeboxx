@@ -14,13 +14,15 @@ import (
 )
 
 // Our main go routine that handles finding the next song to play in the queue.
-func JukeBox(s songqueue.SongQueue) {
+func JukeBox(s songqueue.SongQueue, realTime bool) {
     for {
-        time.Sleep(time.Second * 2)
+        if !realTime {
+            time.Sleep(time.Second * 4)
+        }
         fmt.Println()
         fmt.Println()
 
-        s.Lock.RLock()
+        s.Lock.Lock()
         // Sort the queue before printing out info about the songs
         s.SortQueue()
         // Print out info about the songs in the jukebox
@@ -29,7 +31,7 @@ func JukeBox(s songqueue.SongQueue) {
         for _, element := range s.Songs {
             element.SongInfo()
         }
-        s.Lock.RUnlock()
+        s.Lock.Unlock()
         // Find next song to play, we will always find a song because of how
         // SongQueue.GetNextSong() is implemented, if no song is found we get
         // a random song to play
@@ -38,9 +40,11 @@ func JukeBox(s songqueue.SongQueue) {
         // Play the song and update it's statistics
         s.Songs[requested].Play()
 
-        // Sleep for the duration of the song being played
-        //duration := s.Songs[requested].GetDuration()
-        //time.Sleep(duration)
+        if realTime {
+            // Sleep for the duration of the song being played
+            duration := s.Songs[requested].GetDuration()
+            time.Sleep(duration)
+        }
 
         fmt.Println()
 
@@ -63,6 +67,7 @@ func Guest(songName string, s songqueue.SongQueue, lambda float64) {
 
 func main() {
     guests := flag.Int("guests", 12, "an integer, the number of guests")
+    realTime := flag.Bool("realTime", true, "a flag to toggle real time waiting -realTime=false to toggle off")
 
     flag.Parse()
 
@@ -101,7 +106,7 @@ func main() {
 
     // Main go routine that is the jukebox that plays the songs
     // Start that here
-    go JukeBox(s)
+    go JukeBox(s, *realTime)
 
     // Make goroutines where each guest has a favourite song on the list
     // Maybe change it to more songs and an x number of guests who has a random
