@@ -12,6 +12,19 @@ type Song struct {
     LastPlayed time.Time
 }
 
+type ByVotes []Song
+
+// Methods to enable sorting the queue by votes
+func (v ByVotes) Len() int {
+    return len(v)
+}
+func (v ByVotes) Swap(i, j int) {
+    v[i], v[j] = v[j], v[i]
+}
+func (v ByVotes) Less(i, j int) bool {
+    return v[i].Votes > v[j].Votes
+}
+
 func (s Song) SongInfo() {
     durMinutes, durSeconds := s.Duration / 60, s.Duration % 60
     hours, minutes, seconds := s.LastPlayed.Clock()

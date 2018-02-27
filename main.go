@@ -2,8 +2,8 @@ package main
 
 import (
     "fmt"
-    "github.com/chronicall/jukeboxx/song"
-    "github.com/chronicall/jukeboxx/songqueue"
+    "./song"
+    "./songqueue"
 )
 
 func JukeBox() {
@@ -30,3 +30,4 @@ func main() {
 
     fmt.Println("This is the jukeboxxxxxx")
 }
+
