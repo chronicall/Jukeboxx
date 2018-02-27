@@ -5,11 +5,14 @@ import (
     "../song"
     "sort"
     "time"
+    "sync"
 )
 
 type SongQueue struct {
     Songs []song.Song
+    Lock sync.RWMutex
 }
+
 
 // initialize the list of songs
 // Loop over song names and durations (store in file that we read?)
@@ -36,9 +39,11 @@ func (s *SongQueue) AddSong(songName, songDuration string) {
 }
 
 func (s SongQueue) SortQueue() {
-    // lock queue
+    // lock the queue
+    s.Lock.Lock()
     sort.Sort(song.ByVotes(s.Songs))
-    // unlock queue
+    // Unlock the queue
+    s.Lock.Lock()
 }
 
 // Return index of song in the queue that has the highest votes

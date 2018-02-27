@@ -4,6 +4,7 @@ import (
     "fmt"
     "./song"
     "./songqueue"
+    "sync"
 )
 
 func JukeBox() {
@@ -23,7 +24,7 @@ func Guest(songName string) {
 }
 
 func main() {
-    s := songqueue.SongQueue{[]song.Song{}}
+    s := songqueue.SongQueue{[]song.Song{}, sync.RWMutex{}}
     s.Init()
 
     go JukeBox()
