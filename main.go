@@ -19,9 +19,9 @@ func JukeBox(s songqueue.SongQueue) {
         requested := s.GetNextSong()
         // If we find a song, update it's statistics and play it
         if requested >= 0 {
-            //duration := s.Songs[requested].GetDuration()
             s.Songs[requested].Play()
             // Sleep for the duration of the song being played
+            //duration := s.Songs[requested].GetDuration()
             //time.Sleep(duration)
         } else {
             fmt.Println("No song found :C")

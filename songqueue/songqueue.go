@@ -67,23 +67,37 @@ func (s *SongQueue) GetNextSong() int {
     now := time.Now()
     // and sort the queue by votes
     s.SortQueue()
+    // Set up values to use below
     songIndex := -1
+    foundSong := false
 
     // Loop over all songs in queue, which is sorted by votes
-    // if we find a song that has not been played in 30 minutes or more,
-    // we store that index and break out of the loop
     s.Lock.RLock()
     for index, element := range s.Songs {
-        difference := now.Sub(element.LastPlayed)
-        if difference.Minutes() > 30 {
+        lastPlayedDifference:= now.Sub(element.LastPlayed)
+        firstVoteDifference := now.Sub(element.FirstVote)
+        if !foundSong {
+            if lastPlayedDifference.Minutes() > 30 {
+                // if we find a song, set the bool value to true and set the index
+                // of the song
+                foundSong = true
+                songIndex = index
+            }
+        }
+        // Keep iterating to check for "rotting" songs that have received a vote
+        // but have not been played in 2 hours or more
+        // ensures that every song is eventually played
+        // this time value can be changed
+        if element.Votes > 0 && firstVoteDifference.Hours() > 2 {
             songIndex = index
-            break
         }
     }
     s.Lock.RUnlock()
 
     // Return the index of the song to be played, if no song is found
     // we return -1
+    // TODO: if songIndex == -1
+    //      set songIndex to random number between 0 and len(queue)-1
     return songIndex
 }
 

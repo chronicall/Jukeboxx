@@ -14,6 +14,7 @@ type Song struct {
     Name string
     Votes int
     Duration time.Duration
+    FirstVote time.Time
     LastPlayed time.Time
     Lock sync.RWMutex
 }
@@ -39,6 +40,7 @@ func (v ByVotes) Less(i, j int) bool {
 // Song.GetDuration()
 //      Returns the duration of a song to be used for printing
 //      and calculations
+// TODO: This is all public so we may not actually need this....
 func (s Song) GetDuration() time.Duration {
     return s.Duration
 }
@@ -60,6 +62,9 @@ func (s Song) SongInfo() {
 //      Called when a guest votes for a song
 func (s *Song) VoteForSong() {
     s.Lock.Lock()
+    if s.Votes == 0 {
+        s.FirstVote = time.Now()
+    }
     s.Votes++
     s.Lock.Unlock()
 }
@@ -71,6 +76,8 @@ func (s *Song) Play() {
     fmt.Printf("Now Playing: %s, for %s\n", s.Name, s.Duration.Truncate(time.Second).String())
     s.Lock.Lock()
     s.Votes = 0
+    // IF WEIRD SHIT HAPPENS
+    // RESET FirstVote
     s.LastPlayed = time.Now()
     s.Lock.Unlock()
 }
