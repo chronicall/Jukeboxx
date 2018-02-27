@@ -2,6 +2,7 @@ package songqueue
 
 import (
     "fmt"
+    "math/rand"
     "../song"
     "sort"
     "time"
@@ -41,6 +42,7 @@ func (s *SongQueue) AddSong(songName, songDuration string) {
         Name: songName,
         Votes: 0,
         Duration: dur,
+        FirstVote: time.Time{},
         LastPlayed: time.Time{},
     }
     // Lock the queue while we add a new song to it
@@ -52,11 +54,10 @@ func (s *SongQueue) AddSong(songName, songDuration string) {
 
 // SongQueue.SortQueue()
 //      Sorts the queue by song votes in decreasing order.
+// Assumes that the queue has been locked
 func (s SongQueue) SortQueue() {
-    s.Lock.Lock()
     // See song.go for implementation of functions used by sort.Sort()
     sort.Sort(song.ByVotes(s.Songs))
-    s.Lock.Unlock()
 }
 
 // SongQueue.GetNextSong()
@@ -66,13 +67,14 @@ func (s *SongQueue) GetNextSong() int {
     // Get the time NOW, when we start lookin for next song
     now := time.Now()
     // and sort the queue by votes
-    s.SortQueue()
     // Set up values to use below
     songIndex := -1
     foundSong := false
 
     // Loop over all songs in queue, which is sorted by votes
-    s.Lock.RLock()
+    s.Lock.Lock()
+    s.SortQueue()
+
     for index, element := range s.Songs {
         lastPlayedDifference:= now.Sub(element.LastPlayed)
         firstVoteDifference := now.Sub(element.FirstVote)
@@ -85,43 +87,44 @@ func (s *SongQueue) GetNextSong() int {
             }
         }
         // Keep iterating to check for "rotting" songs that have received a vote
-        // but have not been played in 2 hours or more
+        // but have not been played in 1 hour or more
         // ensures that every song is eventually played
         // this time value can be changed
-        if element.Votes > 0 && firstVoteDifference.Hours() > 2 {
+        if element.Votes > 0 && firstVoteDifference.Hours() > 1 {
             songIndex = index
+            break
         }
     }
-    s.Lock.RUnlock()
+    s.Lock.Unlock()
 
-    // Return the index of the song to be played, if no song is found
-    // we return -1
-    // TODO: if songIndex == -1
-    //      set songIndex to random number between 0 and len(queue)-1
+    // If no song has been found above, pick a random song.
+    if songIndex == -1 {
+        songIndex = rand.Intn(len(s.Songs))
+    }
     return songIndex
 }
 
 // SongQueue.GetSong(songName)
 //      Find a song in the queue by name
 //      Same logic as in GetNextSong() otherwise
+// Only called from within SongQueue.VoteForSong where the queue
+// has already been locked
 func (s *SongQueue) GetSong(songName string) int {
     songIndex := -1
 
-    s.Lock.RLock()
     for index, element := range s.Songs {
         if element.Name == songName {
             songIndex = index
             break
         }
     }
-    s.Lock.RUnlock()
     return songIndex
 }
 
 // SongQueue.VoteForSong(songName)
 //      Vote for a certain song by name
 func (s *SongQueue) VoteForSong(songName string) {
-    s.Lock.RLock()
+    s.Lock.Lock()
     // Find the song we want to vote for
     requested := s.GetSong(songName)
     if requested >= 0 {
@@ -130,6 +133,6 @@ func (s *SongQueue) VoteForSong(songName string) {
     } else {
         fmt.Println("Could not find song and therefore unable to register vote.")
     }
-    s.Lock.RUnlock()
+    s.Lock.Unlock()
 }
 

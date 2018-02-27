@@ -3,6 +3,8 @@ package main
 import (
     "bufio"
     "fmt"
+    "flag"
+    "math/rand"
     "os"
     "./song"
     "./songqueue"
@@ -14,42 +16,44 @@ import (
 // Our main go routine that handles finding the next song to play in the queue.
 func JukeBox(s songqueue.SongQueue) {
     for {
-        time.Sleep(time.Second * 4)
-        // Find next song to play
-        requested := s.GetNextSong()
-        // If we find a song, update it's statistics and play it
-        if requested >= 0 {
-            s.Songs[requested].Play()
-            // Sleep for the duration of the song being played
-            //duration := s.Songs[requested].GetDuration()
-            //time.Sleep(duration)
-        } else {
-            fmt.Println("No song found :C")
-            fmt.Println("This will be handled by playing a random song")
-        }
+        time.Sleep(time.Second * 2)
+        fmt.Println()
+        fmt.Println()
 
-        fmt.Println()
-        fmt.Println()
+        s.Lock.RLock()
+        // Sort the queue before printing out info about the songs
+        s.SortQueue()
         // Print out info about the songs in the jukebox
         // Maybe not required for final handin, more for debug
         // PRINTS OUT UNSORTED QUEUE AFTER A SONG IS PLAYED
-        s.Lock.RLock()
         for _, element := range s.Songs {
             element.SongInfo()
         }
         s.Lock.RUnlock()
+        // Find next song to play, we will always find a song because of how
+        // SongQueue.GetNextSong() is implemented, if no song is found we get
+        // a random song to play
+        requested := s.GetNextSong()
+
+        // Play the song and update it's statistics
+        s.Songs[requested].Play()
+
+        // Sleep for the duration of the song being played
+        //duration := s.Songs[requested].GetDuration()
+        //time.Sleep(duration)
+
+        fmt.Println()
+
     }
-    // if song is playing, poll the queue for the next one to be ready??
 }
 
 // Our goroutine for guests to vote for songs
 // Currently just vote for all songs 3 times
-func Guest(songName string, s songqueue.SongQueue, lambda float32) {
+func Guest(songName string, s songqueue.SongQueue, lambda float64) {
     // Vote for the same song 3 times
-    i := 1
-    for i < 4 {
+    for{
         s.VoteForSong(songName)
-        i = i + 1
+        time.Sleep(time.Second * time.Duration((rand.ExpFloat64() / lambda)))
     }
     // TODO: Find wait time with random
     // A rate of lambda = 0.5 means vote cast ON AVERAGE every 2 seconds
@@ -58,6 +62,10 @@ func Guest(songName string, s songqueue.SongQueue, lambda float32) {
 }
 
 func main() {
+    guests := flag.Int("guests", 12, "an integer, the number of guests")
+
+    flag.Parse()
+
     fmt.Println("This is the jukeboxxxxxx")
 
     // Open the file songlist.txt
@@ -98,9 +106,12 @@ func main() {
     // Make goroutines where each guest has a favourite song on the list
     // Maybe change it to more songs and an x number of guests who has a random
     // favourite song
-    for _, element := range songListSlice {
-        go Guest(element[0], s, 1.1)
+    listLen := len(songListSlice)
+    for i := 0; i < *guests; i++ {
+        lambda := (rand.Float64() * 3) + 0.2
+        go Guest(songListSlice[rand.Intn(listLen)][0], s, lambda)
     }
+
     // endless loop until the jukebox is shut down
     // Maybe add some shutdown sequence/quit symbol
     // Would maybe block.. idk
